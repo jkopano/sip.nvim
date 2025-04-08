@@ -145,12 +145,36 @@ function M.select()
     end, display_items),
     {
       prompt = "Select session> ",
+      winopts = {
+        height = 0.4,
+        width = 0.5,
+        row = 0.5,
+        col = 0.5,
+        anchor = "center",
+      },
+      fzf_opts = {
+        ["--header"] = "Enter: load session | Ctrl-X: delete session",
+      },
       actions = {
         ["default"] = function(selected)
           for _, item in ipairs(display_items) do
             if item.label == selected[1] then
               vim.fn.chdir(item.value.dir)
               M.load()
+              break
+            end
+          end
+        end,
+        ["ctrl-x"] = function(selected)
+          for _, item in ipairs(display_items) do
+            if item.label == selected[1] then
+              local session_path = item.value.session
+              -- Delete the session file
+              if vim.fn.delete(session_path) == 0 then
+                vim.notify("Session deleted: " .. item.label, vim.log.levels.INFO)
+              else
+                vim.notify("Failed to delete session: " .. item.label, vim.log.levels.ERROR)
+              end
               break
             end
           end
