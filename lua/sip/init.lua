@@ -39,6 +39,17 @@ end
 
 function M.start()
   M._active = true
+
+  if Config.options.autoload then
+    vim.api.nvim_create_autocmd("VimEnter", {
+      group = vim.api.nvim_create_augroup("sip_autoload", { clear = true }),
+      callback = function()
+        M.load()
+      end,
+      once = true,
+    })
+  end
+
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = vim.api.nvim_create_augroup("sip", { clear = true }),
     callback = function()

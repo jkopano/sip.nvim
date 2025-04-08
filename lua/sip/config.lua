@@ -6,6 +6,7 @@ local defaults = {
   dir = vim.fn.stdpath("state") .. "/sessions/", -- directory where session files are saved
   need = 1,
   branch = true,
+  autoload = false, -- automatically load matching session on startup
 }
 
 ---@type Sip.Config
