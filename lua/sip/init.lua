@@ -1,5 +1,7 @@
-local Config = require("persistence.config")
+-- sip.nvim
 
+local Config = require("sip.config")
+local fzf = require("fzf-lua")
 local uv = vim.uv or vim.loop
 
 local M = {}
@@ -31,7 +33,6 @@ function M.fire(event)
   })
 end
 
--- Check if a session is active
 function M.active()
   return M._active
 end
@@ -39,7 +40,7 @@ end
 function M.start()
   M._active = true
   vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = vim.api.nvim_create_augroup("persistence", { clear = true }),
+    group = vim.api.nvim_create_augroup("sip", { clear = true }),
     callback = function()
       M.fire("SavePre")
 
@@ -63,7 +64,7 @@ end
 
 function M.stop()
   M._active = false
-  pcall(vim.api.nvim_del_augroup_by_name, "persistence")
+  pcall(vim.api.nvim_del_augroup_by_name, "sip")
 end
 
 function M.save()
@@ -121,20 +122,33 @@ function M.select()
       end
     end
   end
-  vim.ui.select(items, {
-    prompt = "Select a session: ",
-    format_item = function(item)
-      return vim.fn.fnamemodify(item.dir, ":p:~")
-    end,
-  }, function(item)
-    if item then
-      vim.fn.chdir(item.dir)
-      M.load()
-    end
-  end)
+
+  local display_items = vim.tbl_map(function(item)
+    local label = vim.fn.fnamemodify(item.dir, ":p:~")
+    return { label = label, value = item }
+  end, items)
+
+  fzf.fzf_exec(
+    vim.tbl_map(function(i)
+      return i.label
+    end, display_items),
+    {
+      prompt = "Select session> ",
+      actions = {
+        ["default"] = function(selected)
+          for _, item in ipairs(display_items) do
+            if item.label == selected[1] then
+              vim.fn.chdir(item.value.dir)
+              M.load()
+              break
+            end
+          end
+        end,
+      },
+    }
+  )
 end
 
---- get current branch name
 ---@return string?
 function M.branch()
   if uv.fs_stat(".git") then
