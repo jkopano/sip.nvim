@@ -154,6 +154,7 @@ function M.select()
       },
       fzf_opts = {
         ["--header"] = "Enter: load session | Ctrl-X: delete session",
+        ["--multi"] = true,
       },
       actions = {
         ["default"] = function(selected)
@@ -166,16 +167,17 @@ function M.select()
           end
         end,
         ["ctrl-x"] = function(selected)
-          for _, item in ipairs(display_items) do
-            if item.label == selected[1] then
-              local session_path = item.value.session
-              -- Delete the session file
-              if vim.fn.delete(session_path) == 0 then
-                vim.notify("Session deleted: " .. item.label, vim.log.levels.INFO)
-              else
-                vim.notify("Failed to delete session: " .. item.label, vim.log.levels.ERROR)
+          for _, sel in ipairs(selected) do
+            for _, item in ipairs(display_items) do
+              if item.label == sel then
+                local session_path = item.value.session
+                if vim.fn.delete(session_path) == 0 then
+                  vim.notify("Session deleted: " .. item.label, vim.log.levels.INFO)
+                else
+                  vim.notify("Failed to delete session: " .. item.label, vim.log.levels.ERROR)
+                end
+                break
               end
-              break
             end
           end
         end,
